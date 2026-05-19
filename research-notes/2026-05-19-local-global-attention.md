@@ -33,7 +33,7 @@ MATRIX_LR = 0.04
 Best observed validation score:
 
 ```text
-val_bpb = 1.466470
+val_bpb = 1.464637
 peak_vram = 8.3 GB
 ```
 
@@ -52,6 +52,9 @@ peak_vram = 8.3 GB
 | f40b99a | 1.764940 | 8.3 | discard | increase full attention frequency with SSLL |
 | 6f61389 | 1.831403 | 8.3 | discard | reduce full attention frequency with SSSS |
 | 892250b | 1.474364 | 8.3 | discard | verify matrix learning rate 0.05 rerun |
+| fac3e64 | 1.468060 | 8.3 | keep | current best rerun noise check |
+| 3c32710 | 1.464637 | 8.3 | keep | lower matrix learning rate to 0.035 borderline |
+| 3c32710 | 1.465263 | 8.3 | keep | lower matrix learning rate to 0.035 rerun confirmed |
 
 ## Findings
 
@@ -63,14 +66,16 @@ Changing the local/global layer schedule was also harmful in the current impleme
 
 Raising Muon matrix learning rate from 0.04 to 0.05 produced one suspiciously strong trace (`1.453365`) but did not reproduce on a direct rerun (`1.474364`). Treat the strong trace as unresolved noise or a mismatched-log artifact, not as the current best.
 
+Re-running the current best produced `1.468060`, within `0.001590` BPB of the best observed `1.466470`. Treat improvements below roughly `0.002` BPB as noise until confirmed by repeat runs.
+
+Lowering `MATRIX_LR` to `0.035` produced `1.464637` and reproduced at `1.465263`. This is a small but repeatable improvement over the previous best pair (`1.466470`, rerun `1.468060`), so `3c32710` is the current best.
+
 ## Next Overnight Queue
 
-1. Re-run the current best once to estimate noise around 1.466470.
-2. Try `MATRIX_LR = 0.035` on the current best configuration.
-3. Try `WARMDOWN_RATIO = 0.6` with current best settings.
-4. Try `FINAL_LR_FRAC = 0.05` to avoid hard zero LR at the end.
-5. Try `x0_lambdas.fill_(0.05)` instead of `0.1`.
-6. Try removing the value embedding gate complexity only if the first five do not improve.
+1. Try `WARMDOWN_RATIO = 0.6` with the best confirmed settings.
+2. Try `FINAL_LR_FRAC = 0.05` to avoid hard zero LR at the end.
+3. Try `x0_lambdas.fill_(0.05)` instead of `0.1`.
+4. Try removing the value embedding gate complexity only if the first three do not improve.
 
 ## Paper Angle
 
