@@ -48,9 +48,10 @@ peak_vram = 8.3 GB
 | 2fe4d8a | 1.466470 | 8.3 | keep | quarter short attention window |
 | 9370027 | 1.785077 | 8.3 | discard | eighth short attention window |
 | 82331f5 | 1.870031 | 8.3 | discard | third short attention window |
-| c44f0c2 | 1.467850 | 8.3 | discard | raise matrix learning rate to 0.05 |
+| c44f0c2 | 1.453365 | 8.3 | discard | unreproduced matrix learning rate 0.05 trace |
 | f40b99a | 1.764940 | 8.3 | discard | increase full attention frequency with SSLL |
 | 6f61389 | 1.831403 | 8.3 | discard | reduce full attention frequency with SSSS |
+| 892250b | 1.474364 | 8.3 | discard | verify matrix learning rate 0.05 rerun |
 
 ## Findings
 
@@ -60,7 +61,7 @@ Changing the short-window divisor is not monotonic. Moving from the earlier half
 
 Changing the local/global layer schedule was also harmful in the current implementation. Both increasing full-attention frequency with SSLL and reducing it with SSSS reduced throughput and worsened val_bpb. For this setup, SSSL appears to be a useful implementation-aware schedule, not just a modeling choice.
 
-Raising Muon matrix learning rate from 0.04 to 0.05 did not improve the best configuration.
+Raising Muon matrix learning rate from 0.04 to 0.05 produced one suspiciously strong trace (`1.453365`) but did not reproduce on a direct rerun (`1.474364`). Treat the strong trace as unresolved noise or a mismatched-log artifact, not as the current best.
 
 ## Next Overnight Queue
 
