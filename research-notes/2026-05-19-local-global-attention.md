@@ -88,6 +88,7 @@ peak_vram = 8.3 GB
 | d7bf4e8 | 1.454645 | 8.3 | discard | lower matrix weight decay slightly to 0.18 |
 | 71012fc | 1.444474 | 8.3 | keep | raise unembedding learning rate to 0.005 |
 | 71012fc | 1.443150 | 8.3 | keep | raise unembedding learning rate to 0.005 rerun confirmed |
+| 8a3fd6a | 1.444726 | 8.3 | discard | raise unembedding learning rate to 0.006 |
 
 ## Findings
 
@@ -105,13 +106,13 @@ The schedule and initialization follow-ups after `MATRIX_LR=0.035` were negative
 
 The matrix LR sweep now points to a narrow optimum. `0.032` and `0.037` were poor, `0.039` had one excellent trace but failed hard on rerun, and `0.0385` reproduced with `1.449271` and `1.449275`, though a third confirmation was noisier at `1.455500`.
 
-The follow-up optimizer sweep around `MATRIX_LR=0.0385` produced one clear improvement. `EMBEDDING_LR=0.625` had a promising first trace but failed to beat the incumbent on rerun, and `WEIGHT_DECAY=0.18` was worse. Raising `UNEMBEDDING_LR` to `0.005` produced `1.444474` and reproduced stronger at `1.443150`, making it the new confirmed best.
+The follow-up optimizer sweep around `MATRIX_LR=0.0385` produced one clear improvement. `EMBEDDING_LR=0.625` had a promising first trace but failed to beat the incumbent on rerun, and `WEIGHT_DECAY=0.18` was worse. Raising `UNEMBEDDING_LR` to `0.005` produced `1.444474` and reproduced stronger at `1.443150`, making it the new confirmed best. Raising it further to `0.006` was close at `1.444726` but did not beat the confirmed best.
 
 ## Next Overnight Queue
 
-1. Try `UNEMBEDDING_LR = 0.006` with `MATRIX_LR = 0.0385`.
-2. Try `UNEMBEDDING_LR = 0.0045` with `MATRIX_LR = 0.0385`.
-3. Try `UNEMBEDDING_LR = 0.0055` with `MATRIX_LR = 0.0385`.
+1. Try `UNEMBEDDING_LR = 0.0045` with `MATRIX_LR = 0.0385`.
+2. Try `UNEMBEDDING_LR = 0.0055` with `MATRIX_LR = 0.0385`.
+3. Try `UNEMBEDDING_LR = 0.004` with `MATRIX_LR = 0.0385`.
 4. Try `SCALAR_LR = 0.4` with the current best.
 5. Try a third confirmation run of `71012fc` if later improvements are below `0.002` BPB.
 
