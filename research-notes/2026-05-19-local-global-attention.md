@@ -18,7 +18,7 @@ This is a practical SCI-style direction because the result is not just a benchma
 Current best commit:
 
 ```text
-18a1f83 experiment: test midpoint matrix learning rate
+71012fc experiment: raise unembedding learning rate
 ```
 
 Current best settings:
@@ -27,13 +27,16 @@ Current best settings:
 DEPTH = 6
 WINDOW_PATTERN = "SSSL"
 short_window = long_window // 4
-MATRIX_LR = 0.038
+MATRIX_LR = 0.0385
+EMBEDDING_LR = 0.6
+UNEMBEDDING_LR = 0.005
+WEIGHT_DECAY = 0.2
 ```
 
 Best observed validation score:
 
 ```text
-val_bpb = 1.452655
+val_bpb = 1.443150
 peak_vram = 8.3 GB
 ```
 
@@ -67,10 +70,28 @@ peak_vram = 8.3 GB
 | b89b205 | 1.693407 | 8.3 | discard | lower midpoint matrix learning rate to 0.037 |
 | bfcf01c | 1.455197 | 8.3 | discard | lower matrix weight decay to 0.15 |
 | 0accf8f | 1.463517 | 8.3 | discard | lower embedding learning rate to 0.5 |
+| 8bc5e0a | 1.449271 | 8.3 | keep | test finer matrix learning rate 0.0385 |
+| 8bc5e0a | 1.449275 | 8.3 | keep | test finer matrix learning rate 0.0385 rerun confirmed |
+| 3e809e5 | 1.450918 | 8.3 | discard | raise matrix weight decay to 0.25 |
+| 28b3138 | 1.454194 | 8.3 | discard | raise embedding learning rate to 0.7 |
+| 5eebf01 | 1.489291 | 8.3 | discard | lower unembedding learning rate to 0.003 |
+| d104efa | 1.448106 | 8.3 | discard | unreproduced matrix learning rate 0.03825 trace |
+| d104efa | 1.450344 | 8.3 | discard | matrix learning rate 0.03825 rerun failed |
+| ac13105 | 1.452936 | 8.3 | discard | test upper fine matrix learning rate 0.03875 |
+| 56c7db4 | 1.450977 | 8.3 | discard | tune matrix weight decay to 0.22 |
+| 97d62c4 | 1.446793 | 8.3 | discard | unreproduced embedding learning rate 0.65 trace |
+| 97d62c4 | 1.453495 | 8.3 | discard | embedding learning rate 0.65 rerun failed |
+| 8bc5e0a | 1.455500 | 8.3 | keep | matrix learning rate 0.0385 third confirmation noisy |
+| 0c23e4b | 1.617837 | 10.7 | discard | increase depth to seven layers |
+| 711e35d | 1.449233 | 8.3 | discard | unreproduced embedding learning rate 0.625 trace |
+| 711e35d | 1.450275 | 8.3 | discard | embedding learning rate 0.625 rerun failed |
+| d7bf4e8 | 1.454645 | 8.3 | discard | lower matrix weight decay slightly to 0.18 |
+| 71012fc | 1.444474 | 8.3 | keep | raise unembedding learning rate to 0.005 |
+| 71012fc | 1.443150 | 8.3 | keep | raise unembedding learning rate to 0.005 rerun confirmed |
 
 ## Findings
 
-The best result so far is the depth-6 model with quarter-length short windows, the original SSSL local/global layer pattern, and a Muon matrix learning rate of `0.038`.
+The best result so far is the depth-6 model with quarter-length short windows, the original SSSL local/global layer pattern, a Muon matrix learning rate of `0.0385`, and a higher unembedding learning rate of `0.005`.
 
 Changing the short-window divisor is not monotonic. Moving from the earlier half-window setup to quarter-window produced a small improvement, but third-window and eighth-window variants were much worse on this machine. The logs show that poor variants often reduced total trained tokens sharply, so the fixed-time metric is dominated by both model quality and kernel/runtime behavior.
 
@@ -82,15 +103,17 @@ Re-running the earlier best produced `1.468060`, within `0.001590` BPB of `1.466
 
 The schedule and initialization follow-ups after `MATRIX_LR=0.035` were negative: `WARMDOWN_RATIO=0.6` degraded sharply, `FINAL_LR_FRAC=0.05` was worse, and lowering `x0_lambdas` init to `0.05` was worse. Removing the value embedding gate simplified the model but worsened BPB enough to discard it.
 
-The matrix LR sweep now points to a narrow optimum. `0.032` and `0.037` were poor, `0.039` had one excellent trace but failed hard on rerun, and `0.038` reproduced with `1.453340` and `1.452655`. Lowering matrix weight decay to `0.15` and lowering embedding LR to `0.5` were both worse than the current best.
+The matrix LR sweep now points to a narrow optimum. `0.032` and `0.037` were poor, `0.039` had one excellent trace but failed hard on rerun, and `0.0385` reproduced with `1.449271` and `1.449275`, though a third confirmation was noisier at `1.455500`.
+
+The follow-up optimizer sweep around `MATRIX_LR=0.0385` produced one clear improvement. `EMBEDDING_LR=0.625` had a promising first trace but failed to beat the incumbent on rerun, and `WEIGHT_DECAY=0.18` was worse. Raising `UNEMBEDDING_LR` to `0.005` produced `1.444474` and reproduced stronger at `1.443150`, making it the new confirmed best.
 
 ## Next Overnight Queue
 
-1. Try a third confirmation run of `MATRIX_LR = 0.038`.
-2. Try `MATRIX_LR = 0.0385` as a tighter midpoint.
-3. Try `WEIGHT_DECAY = 0.25` with `MATRIX_LR = 0.038`.
-4. Try `EMBEDDING_LR = 0.7` with `MATRIX_LR = 0.038`.
-5. Try `UNEMBEDDING_LR = 0.003` with `MATRIX_LR = 0.038`.
+1. Try `UNEMBEDDING_LR = 0.006` with `MATRIX_LR = 0.0385`.
+2. Try `UNEMBEDDING_LR = 0.0045` with `MATRIX_LR = 0.0385`.
+3. Try `UNEMBEDDING_LR = 0.0055` with `MATRIX_LR = 0.0385`.
+4. Try `SCALAR_LR = 0.4` with the current best.
+5. Try a third confirmation run of `71012fc` if later improvements are below `0.002` BPB.
 
 ## Paper Angle
 
