@@ -18,7 +18,7 @@ This is a practical SCI-style direction because the result is not just a benchma
 Current best commit:
 
 ```text
-2fe4d8a experiment: quarter short attention window
+18a1f83 experiment: test midpoint matrix learning rate
 ```
 
 Current best settings:
@@ -27,13 +27,13 @@ Current best settings:
 DEPTH = 6
 WINDOW_PATTERN = "SSSL"
 short_window = long_window // 4
-MATRIX_LR = 0.04
+MATRIX_LR = 0.038
 ```
 
 Best observed validation score:
 
 ```text
-val_bpb = 1.466470
+val_bpb = 1.452655
 peak_vram = 8.3 GB
 ```
 
@@ -52,10 +52,20 @@ peak_vram = 8.3 GB
 | f40b99a | 1.764940 | 8.3 | discard | increase full attention frequency with SSLL |
 | 6f61389 | 1.831403 | 8.3 | discard | reduce full attention frequency with SSSS |
 | 892250b | 1.474364 | 8.3 | discard | verify matrix learning rate 0.05 rerun |
+| fac3e64 | 1.468060 | 8.3 | keep | current best rerun noise check |
+| 3c32710 | 1.464637 | 8.3 | keep | lower matrix learning rate to 0.035 borderline |
+| 3c32710 | 1.465263 | 8.3 | keep | lower matrix learning rate to 0.035 rerun confirmed |
+| e9fbed1 | 1.515459 | 8.3 | discard | extend learning rate warmdown to 0.6 |
+| 0867c36 | 1.473352 | 8.3 | discard | keep nonzero final learning rate 0.05 |
+| f45c439 | 1.475755 | 8.3 | discard | lower x0 residual init to 0.05 |
+| dc3d5df | 1.468428 | 8.2 | discard | remove value embedding gate |
+| 45305a3 | 1.478402 | 8.3 | discard | lower matrix learning rate further to 0.032 |
+| 18a1f83 | 1.453340 | 8.3 | keep | test midpoint matrix learning rate 0.038 |
+| 18a1f83 | 1.452655 | 8.3 | keep | test midpoint matrix learning rate 0.038 rerun confirmed |
 
 ## Findings
 
-The best result so far is the depth-6 model with quarter-length short windows and the original SSSL local/global layer pattern.
+The best result so far is the depth-6 model with quarter-length short windows, the original SSSL local/global layer pattern, and a Muon matrix learning rate of `0.038`.
 
 Changing the short-window divisor is not monotonic. Moving from the earlier half-window setup to quarter-window produced a small improvement, but third-window and eighth-window variants were much worse on this machine. The logs show that poor variants often reduced total trained tokens sharply, so the fixed-time metric is dominated by both model quality and kernel/runtime behavior.
 
@@ -63,14 +73,19 @@ Changing the local/global layer schedule was also harmful in the current impleme
 
 Raising Muon matrix learning rate from 0.04 to 0.05 produced one suspiciously strong trace (`1.453365`) but did not reproduce on a direct rerun (`1.474364`). Treat the strong trace as unresolved noise or a mismatched-log artifact, not as the current best.
 
+Re-running the earlier best produced `1.468060`, within `0.001590` BPB of `1.466470`. Lowering `MATRIX_LR` to `0.035` produced `1.464637` and reproduced at `1.465263`, making it a confirmed improvement at the time.
+
+The first schedule and initialization follow-ups after `MATRIX_LR=0.035` were negative: `WARMDOWN_RATIO=0.6` degraded sharply, `FINAL_LR_FRAC=0.05` was worse, and lowering `x0_lambdas` init to `0.05` was worse.
+
+Removing the value embedding gate simplified the model but worsened BPB enough to discard it. Lowering `MATRIX_LR` further to `0.032` was also worse, while the midpoint `0.038` produced `1.453340` and reproduced at `1.452655`, making it the strongest confirmed setting so far.
+
 ## Next Overnight Queue
 
-1. Re-run the current best once to estimate noise around 1.466470.
-2. Try `MATRIX_LR = 0.035` on the current best configuration.
-3. Try `WARMDOWN_RATIO = 0.6` with current best settings.
-4. Try `FINAL_LR_FRAC = 0.05` to avoid hard zero LR at the end.
-5. Try `x0_lambdas.fill_(0.05)` instead of `0.1`.
-6. Try removing the value embedding gate complexity only if the first five do not improve.
+1. Try `MATRIX_LR = 0.039` near the new optimum.
+2. Try `MATRIX_LR = 0.037` near the new optimum.
+3. Try `WEIGHT_DECAY = 0.15` with `MATRIX_LR = 0.038`.
+4. Try `EMBEDDING_LR = 0.5` with `MATRIX_LR = 0.038`.
+5. Try a third confirmation run of `MATRIX_LR = 0.038` if later improvements are below `0.002` BPB.
 
 ## Paper Angle
 
