@@ -90,6 +90,8 @@ peak_vram = 8.3 GB
 | 71012fc | 1.443150 | 8.3 | keep | raise unembedding learning rate to 0.005 rerun confirmed |
 | 8a3fd6a | 1.444726 | 8.3 | discard | raise unembedding learning rate to 0.006 |
 | c56f698 | 1.473676 | 8.3 | discard | lower unembedding learning rate to 0.0045 |
+| 9661d39 | 1.441830 | 8.3 | discard | unreproduced unembedding learning rate 0.0055 trace |
+| 9661d39 | 1.447256 | 8.3 | discard | unembedding learning rate 0.0055 rerun failed |
 
 ## Findings
 
@@ -107,13 +109,13 @@ The schedule and initialization follow-ups after `MATRIX_LR=0.035` were negative
 
 The matrix LR sweep now points to a narrow optimum. `0.032` and `0.037` were poor, `0.039` had one excellent trace but failed hard on rerun, and `0.0385` reproduced with `1.449271` and `1.449275`, though a third confirmation was noisier at `1.455500`.
 
-The follow-up optimizer sweep around `MATRIX_LR=0.0385` produced one clear improvement. `EMBEDDING_LR=0.625` had a promising first trace but failed to beat the incumbent on rerun, and `WEIGHT_DECAY=0.18` was worse. Raising `UNEMBEDDING_LR` to `0.005` produced `1.444474` and reproduced stronger at `1.443150`, making it the new confirmed best. Raising it further to `0.006` was close at `1.444726` but did not beat the confirmed best. Lowering it to `0.0045` degraded sharply to `1.473676`.
+The follow-up optimizer sweep around `MATRIX_LR=0.0385` produced one clear improvement. `EMBEDDING_LR=0.625` had a promising first trace but failed to beat the incumbent on rerun, and `WEIGHT_DECAY=0.18` was worse. Raising `UNEMBEDDING_LR` to `0.005` produced `1.444474` and reproduced stronger at `1.443150`, making it the new confirmed best. Raising it further to `0.006` was close at `1.444726` but did not beat the confirmed best. Lowering it to `0.0045` degraded sharply to `1.473676`. The midpoint `0.0055` produced the best single trace so far at `1.441830`, but failed to reproduce at `1.447256`.
 
 ## Next Overnight Queue
 
-1. Try `UNEMBEDDING_LR = 0.0055` with `MATRIX_LR = 0.0385`.
-2. Try `UNEMBEDDING_LR = 0.00525` with `MATRIX_LR = 0.0385`.
-3. Try `UNEMBEDDING_LR = 0.00475` with `MATRIX_LR = 0.0385`.
+1. Try `UNEMBEDDING_LR = 0.00525` with `MATRIX_LR = 0.0385`.
+2. Try `UNEMBEDDING_LR = 0.00475` with `MATRIX_LR = 0.0385`.
+3. Try a third `UNEMBEDDING_LR = 0.0055` run only if nearby values improve or remain borderline.
 4. Try `SCALAR_LR = 0.4` with the current best.
 5. Try a third confirmation run of `71012fc` if later improvements are below `0.002` BPB.
 
