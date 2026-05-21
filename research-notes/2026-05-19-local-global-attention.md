@@ -96,6 +96,7 @@ peak_vram = 8.3 GB
 | acebbee | 1.445093 | 8.3 | discard | test unembedding learning rate 0.00475 |
 | 72b2777 | 1.455649 | 8.3 | discard | lower scalar learning rate to 0.4 |
 | 65eb8bd | 1.471087 | 8.3 | discard | raise scalar learning rate to 0.6 |
+| 3472789 | 1.446733 | 8.3 | discard | raise matrix weight decay slightly to 0.21 |
 
 ## Findings
 
@@ -113,12 +114,12 @@ The schedule and initialization follow-ups after `MATRIX_LR=0.035` were negative
 
 The matrix LR sweep now points to a narrow optimum. `0.032` and `0.037` were poor, `0.039` had one excellent trace but failed hard on rerun, and `0.0385` reproduced with `1.449271` and `1.449275`, though a third confirmation was noisier at `1.455500`.
 
-The follow-up optimizer sweep around `MATRIX_LR=0.0385` produced one clear improvement. `EMBEDDING_LR=0.625` had a promising first trace but failed to beat the incumbent on rerun, and `WEIGHT_DECAY=0.18` was worse. Raising `UNEMBEDDING_LR` to `0.005` produced `1.444474` and reproduced stronger at `1.443150`, making it the new confirmed best. Raising it further to `0.006` was close at `1.444726` but did not beat the confirmed best. Lowering it to `0.0045` degraded sharply to `1.473676`. The midpoint `0.0055` produced the best single trace so far at `1.441830`, but failed to reproduce at `1.447256`; nearby `0.00525` and `0.00475` were also worse at `1.446041` and `1.445093`. Moving `SCALAR_LR` away from `0.5` was negative in both directions: `0.4` scored `1.455649` and `0.6` scored `1.471087`.
+The follow-up optimizer sweep around `MATRIX_LR=0.0385` produced one clear improvement. `EMBEDDING_LR=0.625` had a promising first trace but failed to beat the incumbent on rerun, and `WEIGHT_DECAY=0.18` was worse. Raising `UNEMBEDDING_LR` to `0.005` produced `1.444474` and reproduced stronger at `1.443150`, making it the new confirmed best. Raising it further to `0.006` was close at `1.444726` but did not beat the confirmed best. Lowering it to `0.0045` degraded sharply to `1.473676`. The midpoint `0.0055` produced the best single trace so far at `1.441830`, but failed to reproduce at `1.447256`; nearby `0.00525` and `0.00475` were also worse at `1.446041` and `1.445093`. Moving `SCALAR_LR` away from `0.5` was negative in both directions: `0.4` scored `1.455649` and `0.6` scored `1.471087`. Raising matrix weight decay slightly to `0.21` was also worse at `1.446733`.
 
 ## Next Overnight Queue
 
-1. Try `WEIGHT_DECAY = 0.21` with the current best.
-2. Try `WEIGHT_DECAY = 0.19` with the current best.
+1. Try `WEIGHT_DECAY = 0.19` with the current best.
+2. Try a third confirmation run of `71012fc` to re-estimate incumbent noise.
 3. Try a third `UNEMBEDDING_LR = 0.0055` run only if nearby values improve or remain borderline.
 4. Try `MATRIX_LR = 0.03825` again only if the noise model requires another close-proximity check.
 5. Try a third confirmation run of `71012fc` if later improvements are below `0.002` BPB.
