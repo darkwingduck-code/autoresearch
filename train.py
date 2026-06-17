@@ -504,6 +504,14 @@ autocast_ctx = torch.amp.autocast(device_type="cuda", dtype=torch.bfloat16)
 H100_BF16_PEAK_FLOPS = 989.5e12
 
 tokenizer = Tokenizer.from_directory()
+_tokenizer_encode = tokenizer.encode
+
+
+def encode_single_thread(text, prepend=None, num_threads=1):
+    return _tokenizer_encode(text, prepend=prepend, num_threads=1)
+
+
+tokenizer.encode = encode_single_thread
 vocab_size = tokenizer.get_vocab_size()
 print(f"Vocab size: {vocab_size:,}")
 
